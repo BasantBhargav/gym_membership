@@ -2,33 +2,40 @@ const express = require('express');
 const router = express.Router();
 const Member = require('../../models/Member');
 const ownerAuth = require('../../middleware/ownerAuth');
+const {
+  calculateTotalFee,
+  calculateExpiryDate,
+} = require('../../utils/feeCalculator');
 
-// Get all members of an owner
+// Get all members (owner-wise, excluding soft deleted)
 router.get('/', ownerAuth, async (req, res) => {
   try {
-    const members = await Member.find({ ownerId: req.owner.id });
-    res.json({
-      message: 'Members fetched successfully',
-      members,
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    const members = await Member.find({ ownerId: req.owner.id, deletedAt: null });
+    res.json({ members });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 
 // Add new member
 router.post('/', ownerAuth, async (req, res) => {
   try {
-    const { name, email, phone, membershipType, expiryDate, amount } = req.body;
+    const { name, phone, email, plan, months } = req.body;
+
+    const joinDate = new Date();
+    const totalFees = calculateTotalFee(plan, months);
+    const expiryDate = calculateExpiryDate(joinDate, months);
 
     const member = new Member({
       ownerId: req.owner.id,
       name,
-      email,
       phone,
-      membershipType,
+      email,
+      plan,
+      totalFees,
+      amountPaid: 0,
+      joinDate,
       expiryDate,
-      amount,
     });
 
     await member.save();
@@ -37,8 +44,8 @@ router.post('/', ownerAuth, async (req, res) => {
       message: 'Member added successfully',
       member,
     });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 
@@ -57,25 +64,29 @@ router.put('/:id', ownerAuth, async (req, res) => {
       message: 'Member updated successfully',
       member,
     });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 
-// Delete member
+// Soft delete member (deactivate)
 router.delete('/:id', ownerAuth, async (req, res) => {
   try {
-    const member = await Member.findByIdAndDelete(req.params.id);
+    const member = await Member.findByIdAndUpdate(
+      req.params.id,
+      { deletedAt: new Date(), isActive: false },
+      { new: true }
+    );
 
     if (!member) {
       return res.status(404).json({ message: 'Member not found' });
     }
 
     res.json({
-      message: 'Member deleted successfully',
+      message: 'Member deactivated successfully',
     });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 

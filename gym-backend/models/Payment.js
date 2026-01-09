@@ -16,25 +16,17 @@ const paymentSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    paymentDate: {
-      type: Date,
-      default: Date.now,
-    },
     paymentMethod: {
       type: String,
-      enum: ['cash', 'credit_card', 'debit_card', 'upi', 'bank_transfer'],
+      enum: ['cash', 'upi', 'card', 'bank'],
       default: 'cash',
     },
     transactionId: {
       type: String,
     },
-    status: {
-      type: String,
-      enum: ['pending', 'completed', 'failed', 'refunded'],
-      default: 'pending',
-    },
-    notes: {
-      type: String,
+    date: {
+      type: Date,
+      default: Date.now,
     },
   },
   { timestamps: true }

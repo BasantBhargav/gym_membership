@@ -3,64 +3,66 @@ const router = express.Router();
 const Member = require('../../models/Member');
 const Payment = require('../../models/Payment');
 const ownerAuth = require('../../middleware/ownerAuth');
+const { isMembershipExpired, isDueSoon } = require('../../utils/feeCalculator');
 
-// Get dashboard data for owner
 router.get('/', ownerAuth, async (req, res) => {
   try {
     const ownerId = req.owner.id;
 
-    // Total members
-    const totalMembers = await Member.countDocuments({
-      ownerId,
-      isActive: true,
+    // Get all active members
+    const members = await Member.find({ ownerId, deletedAt: null });
+    const payments = await Payment.find({ ownerId });
+
+    // Calculate stats
+    const activeMembers = members.filter(m => !isMembershipExpired(m.expiryDate));
+    const expiredMembers = members.filter(m => isMembershipExpired(m.expiryDate));
+    const dueSoonMembers = members.filter(m => isDueSoon(m.expiryDate) && !isMembershipExpired(m.expiryDate));
+
+    let totalRevenue = 0;
+    let cashCollection = 0;
+    let onlineCollection = 0;
+    
+    payments.forEach(p => {
+      if (p.status === 'completed') {
+        totalRevenue += p.amount;
+        if (p.paymentMethod === 'cash') {
+          cashCollection += p.amount;
+        } else {
+          onlineCollection += p.amount;
+        }
+      }
     });
 
-    // Active members
-    const activeMembers = await Member.find({
-      ownerId,
-      isActive: true,
-      expiryDate: { $gt: new Date() },
+    // Get remaining due
+    let totalDue = 0;
+    members.forEach(m => {
+      totalDue += (m.totalFees - m.amountPaid);
     });
-
-    // Expired members
-    const expiredMembers = await Member.countDocuments({
-      ownerId,
-      expiryDate: { $lte: new Date() },
-    });
-
-    // Due payments
-    const duePayments = await Member.countDocuments({
-      ownerId,
-      isPaid: false,
-    });
-
-    // Total revenue (completed payments)
-    const revenueData = await Payment.aggregate([
-      { $match: { ownerId, status: 'completed' } },
-      { $group: { _id: null, totalRevenue: { $sum: '$amount' } } },
-    ]);
-
-    const totalRevenue = revenueData[0]?.totalRevenue || 0;
-
-    // Recent payments
-    const recentPayments = await Payment.find({ ownerId })
-      .populate('memberId', 'name')
-      .sort({ paymentDate: -1 })
-      .limit(5);
 
     res.json({
-      message: 'Dashboard data fetched successfully',
-      dashboard: {
-        totalMembers,
+      summary: {
+        totalMembers: members.length,
         activeMembers: activeMembers.length,
-        expiredMembers,
-        duePayments,
+        expiredMembers: expiredMembers.length,
+        dueSoonMembers: dueSoonMembers.length,
+      },
+      revenue: {
         totalRevenue,
-        recentPayments,
+        cashCollection,
+        onlineCollection,
+        totalDue,
+      },
+      alerts: {
+        dueSoon: dueSoonMembers.map(m => ({
+          id: m._id,
+          name: m.name,
+          daysLeft: Math.ceil((m.expiryDate - new Date()) / (1000 * 60 * 60 * 24)),
+        })),
+        expired: expiredMembers.slice(0, 5),
       },
     });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 

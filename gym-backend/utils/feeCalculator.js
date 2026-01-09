@@ -1,44 +1,42 @@
-// Calculate membership fee based on type and duration
-const calculateFee = (membershipType, months = 1) => {
-  const feeStructure = {
-    basic: 500,      // ₹500 per month
-    premium: 800,    // ₹800 per month
-    elite: 1200,     // ₹1200 per month
-  };
+// Monthly fee structure
+const feeStructure = {
+  basic: 500,
+  premium: 800,
+  elite: 1200,
+};
 
+// Calculate total fee
+const calculateTotalFee = (membershipType = 'basic', months = 1) => {
   const monthlyFee = feeStructure[membershipType] || feeStructure.basic;
   return monthlyFee * months;
 };
 
-// Calculate expiry date from join date
+// Calculate expiry date
 const calculateExpiryDate = (joinDate, months = 1) => {
   const expiryDate = new Date(joinDate);
   expiryDate.setMonth(expiryDate.getMonth() + months);
   return expiryDate;
 };
 
-// Check if membership is expired
+// Check if membership expired
 const isMembershipExpired = (expiryDate) => {
-  const today = new Date();
-  return expiryDate <= today;
+  return new Date(expiryDate) <= new Date();
 };
 
-// Calculate days until expiry
+// Days left until expiry
 const daysUntilExpiry = (expiryDate) => {
-  const today = new Date();
-  const timeDiff = expiryDate - today;
-  const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-  return daysDiff;
+  const diff = new Date(expiryDate) - new Date();
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
 };
 
-// Check if payment is due soon (within 7 days)
+// Due soon (within 7 days)
 const isDueSoon = (expiryDate) => {
   const days = daysUntilExpiry(expiryDate);
   return days > 0 && days <= 7;
 };
 
 module.exports = {
-  calculateFee,
+  calculateTotalFee,
   calculateExpiryDate,
   isMembershipExpired,
   daysUntilExpiry,

@@ -11,18 +11,24 @@ const memberSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    email: {
-      type: String,
-      lowercase: true,
-    },
     phone: {
       type: String,
       required: true,
     },
-    membershipType: {
+    email: {
+      type: String,
+    },
+    plan: {
       type: String,
       enum: ['basic', 'premium', 'elite'],
-      default: 'basic',
+    },
+    totalFees: {
+      type: Number,
+      required: true,
+    },
+    amountPaid: {
+      type: Number,
+      default: 0,
     },
     joinDate: {
       type: Date,
@@ -32,17 +38,13 @@ const memberSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
-    amount: {
-      type: Number,
-      required: true,
-    },
-    isPaid: {
-      type: Boolean,
-      default: false,
-    },
     isActive: {
       type: Boolean,
       default: true,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true }
