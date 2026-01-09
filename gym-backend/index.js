@@ -28,6 +28,7 @@ app.use('/api/owner/members', require('./routes/owner/members'));
 app.use('/api/owner/payments', require('./routes/owner/payments'));
 app.use('/api/owner/dashboard', require('./routes/owner/dashboard'));
 app.use('/api/owner/reports', require('./routes/owner/reports'));
+app.use('/api/owner/plans', require('./routes/owner/plans'));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

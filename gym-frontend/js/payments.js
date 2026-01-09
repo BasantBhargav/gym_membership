@@ -76,11 +76,15 @@ function openAddPaymentModal() {
 async function handleAddPayment(event) {
   event.preventDefault();
 
+  const now = new Date();
+  const billingMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   const data = {
     memberId: document.getElementById('paymentMemberId').value,
     amount: parseInt(document.getElementById('paymentAmount').value),
     paymentMethod: document.getElementById('paymentMethod').value,
     transactionId: document.getElementById('paymentTransactionId').value || null,
+    billingMonth: billingMonth,
+    date: new Date().toISOString(),
   };
 
   try {

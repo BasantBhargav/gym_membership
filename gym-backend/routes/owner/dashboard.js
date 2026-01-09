@@ -18,18 +18,25 @@ router.get('/', ownerAuth, async (req, res) => {
     const expiredMembers = members.filter(m => isMembershipExpired(m.expiryDate));
     const dueSoonMembers = members.filter(m => isDueSoon(m.expiryDate) && !isMembershipExpired(m.expiryDate));
 
+    // Current month snapshot
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const currentMonthPayments = payments.filter(p => p.billingMonth === currentMonth);
+    const currentMonthTotal = currentMonthPayments.reduce((s, p) => s + p.amount, 0);
+    
+    const paidMembersThisMonth = new Set(currentMonthPayments.map(p => p.memberId.toString()));
+    const unpaidThisMonth = members.filter(m => !paidMembersThisMonth.has(m._id.toString())).length;
+
     let totalRevenue = 0;
     let cashCollection = 0;
     let onlineCollection = 0;
     
     payments.forEach(p => {
-      if (p.status === 'completed') {
-        totalRevenue += p.amount;
-        if (p.paymentMethod === 'cash') {
-          cashCollection += p.amount;
-        } else {
-          onlineCollection += p.amount;
-        }
+      totalRevenue += p.amount;
+      if (p.paymentMethod === 'cash') {
+        cashCollection += p.amount;
+      } else {
+        onlineCollection += p.amount;
       }
     });
 
@@ -45,6 +52,14 @@ router.get('/', ownerAuth, async (req, res) => {
         activeMembers: activeMembers.length,
         expiredMembers: expiredMembers.length,
         dueSoonMembers: dueSoonMembers.length,
+      },
+      currentMonth: {
+        month: currentMonth,
+        collection: currentMonthTotal,
+        paidMembers: paidMembersThisMonth.size,
+        unpaidMembers: unpaidThisMonth,
+        cashThisMonth: currentMonthPayments.filter(p => p.paymentMethod === 'cash').reduce((s, p) => s + p.amount, 0),
+        onlineThisMonth: currentMonthPayments.filter(p => p.paymentMethod !== 'cash').reduce((s, p) => s + p.amount, 0),
       },
       revenue: {
         totalRevenue,

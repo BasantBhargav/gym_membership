@@ -56,7 +56,7 @@ function renderMembersTable() {
                 <td><span class="badge badge-${status}">${status}</span></td>
                 <td>
                   <div class="action-buttons">
-                    <button class="btn btn-primary btn-small" onclick="openEditMemberModal('${member._id}')">Edit</button>
+                    <button class="btn btn-primary btn-small" onclick="viewMemberHistory('${member._id}')">History</button>
                     <button class="btn btn-danger btn-small" onclick="deleteMember('${member._id}')">Delete</button>
                   </div>
                 </td>

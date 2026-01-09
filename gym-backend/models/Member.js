@@ -22,6 +22,10 @@ const memberSchema = new mongoose.Schema(
       type: String,
       enum: ['basic', 'premium', 'elite'],
     },
+    planId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Plan',
+    },
     totalFees: {
       type: Number,
       required: true,

@@ -24,6 +24,11 @@ const paymentSchema = new mongoose.Schema(
     transactionId: {
       type: String,
     },
+    billingMonth: {
+      // format: YYYY-MM
+      type: String,
+      required: true,
+    },
     date: {
       type: Date,
       default: Date.now,
