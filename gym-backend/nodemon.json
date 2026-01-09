@@ -1,0 +1,20 @@
+{
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "watch": [
+    "index.js",
+    "config/",
+    "models/",
+    "routes/",
+    "utils/",
+    "middleware/"
+  ],
+  "ext": "js",
+  "ignore": [
+    "node_modules/",
+    ".git",
+    "dist/"
+  ],
+  "delay": 500
+}
