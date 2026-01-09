@@ -58,7 +58,7 @@ function closeModal(modalId) {
   document.getElementById(modalId).classList.remove('show');
 }
 
-// Auth Functions
+// Login Handler
 async function handleLogin(event) {
   event.preventDefault();
 
@@ -79,6 +79,7 @@ async function handleLogin(event) {
   }
 }
 
+// Register Handler
 async function handleRegister(event) {
   event.preventDefault();
 
@@ -105,14 +106,15 @@ async function handleRegister(event) {
   }
 }
 
+// Logout Handler
 function handleLogout() {
   if (confirm('Are you sure you want to logout?')) {
     StorageManager.logout();
-    showAuthUI();
+    window.location.href = 'login.html';
   }
 }
 
-// UI Functions
+// Show App UI
 function showAppUI() {
   const ownerInfo = StorageManager.getOwnerInfo();
   if (ownerInfo) {
@@ -121,50 +123,13 @@ function showAppUI() {
   }
 }
 
-function showAuthUI() {
-  alert('Please login or register to continue');
-  window.location.reload();
-}
-
-function handleLogout() {
-  if (confirm('Are you sure you want to logout?')) {
-    StorageManager.logout();
-    showAuthUI();
-  }
-}
-    loadMembers();
-  } else if (tabName === 'payments') {
-    loadPayments();
-  }
-}
-
-function showAlert(alertId, message, type) {
-  const alert = document.getElementById(alertId);
-  alert.textContent = message;
-  alert.className = `alert show alert-${type}`;
-  
-  if (type !== 'info') {
-    setTimeout(() => {
-      alert.classList.remove('show');
-    }, 5000);
-  }
-}
-
-function openModal(modalId) {
-  document.getElementById(modalId).classList.add('show');
-}
-
-function closeModal(modalId) {
-  document.getElementById(modalId).classList.remove('show');
-}
-
-// Check if user is logged in on page load
+// Check authentication on page load
 window.addEventListener('DOMContentLoaded', () => {
   const token = StorageManager.getToken();
-  if (token) {
+  if (!token) {
+    window.location.href = 'login.html';
+  } else {
     showAppUI();
     loadDashboard();
-  } else {
-    showAuthUI();
   }
 });
